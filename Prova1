@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carosello con frecce</title>
+    
+    <style>
+        /* Contenitore del carosello */
+        .carousel {
+            position: relative;
+            width: 100%; 
+            max-width: 600px; /* Limita la larghezza massima del carosello */
+            height: auto;
+            overflow: hidden; /* Nasconde le immagini fuori dall'area visibile */
+            margin: auto; /* Centra il carosello nella pagina */
+            border-radius: 10px; /* Arrotonda leggermente gli angoli */
+        }
+
+        /* Contenitore interno che contiene tutte le immagini in fila */
+        .carousel-inner {
+            display: flex; /* Dispone le immagini in riga */
+            width: 300%; /* Il contenitore è largo 3 volte la dimensione del carosello, perché contiene 3 immagini */
+            transition: transform 0.5s ease; /* Transizione per lo scorrimento fluido */
+        }
+
+        /* Stile delle immagini nel carosello */
+        .carousel img {
+            width: 33.33%; /* Ogni immagine occupa il 33,33% della larghezza del carosello */
+            max-height: 400px; /* Limita l'altezza per mantenere proporzioni corrette */
+            object-fit: cover; /* Fa sì che l'immagine riempia il riquadro senza distorsioni */
+        }
+
+        /* Posizionamento delle frecce */
+        .arrow-left, .arrow-right {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .arrow-left {
+            left: 10px;
+        }
+
+        .arrow-right {
+            right: 10px;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <!-- Contenitore del carosello -->
+    <div class="carousel">
+        <!-- Freccia sinistra -->
+        <button class="arrow-left" onclick="moveSlide(-1)">&#10094;</button>
+
+        <!-- Contenitore interno che contiene tutte le immagini -->
+        <div class="carousel-inner">
+            <!-- Lista delle immagini nel carosello -->
+            <img src="https://images1.vinted.net/t/04_02206_A65iPQa1CVtvhyD7sSSFQ642/f800/1739552397.jpeg?s=c770c21fdc5854ce86b90bd84c8b2f58d78d56cb" />
+            <img src="https://images1.vinted.net/t/04_02448_5DnCHa2GGkxT3XSX47dqzjww/f800/1739551753.jpeg?s=91ffd1b3b97adf945e98e135dc0ae8bec38ee43c" />
+            <img src="https://images1.vinted.net/t/04_00b93_btvwqL11tioRP6YFHhsHVd47/f800/1741005154.jpeg?s=2ddb8302312d4b1f75ca48e91678ded17e89c305" />
+        </div>
+
+        <!-- Freccia destra -->
+        <button class="arrow-right" onclick="moveSlide(1)">&#10095;</button>
+    </div>
+
+    <script>
+        let currentIndex = 0;  // Indice corrente dell'immagine
+
+        function moveSlide(step) {
+            const slides = document.querySelectorAll(".carousel-inner img");
+            const totalSlides = slides.length;
+
+            // Calcola il nuovo indice
+            currentIndex = (currentIndex + step + totalSlides) % totalSlides;
+
+            // Calcola la posizione da cui spostare le immagini
+            const newTransformValue = -currentIndex * 100 / totalSlides;
+
+            // Applica la trasformazione per lo scorrimento
+            document.querySelector(".carousel-inner").style.transform = `translateX(${newTransformValue}%)`;
+        }
+    </script>
+
+</body>
+</html>
