@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Timers</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .timer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .timer-label {
+            flex: 1;
+            text-align: left;
+        }
+        .timer-display {
+            width: 80px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #66bb6a;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .notifications {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eef;
+            border-radius: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            text-align: left;
+        }
+        .notification {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .email-input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Project Management Timers</h2>
+        <input type="email" id="email" class="email-input" placeholder="Enter your email for notifications">
+        <div id="timers"></div>
+        <h3>Notifications</h3>
+        <div class="notifications" id="notifications"></div>
+    </div>
+
+    <script>
+        const timersData = [
+            { id: 'startMyDay', name: 'Start my day (20-20-20 Rule)', duration: 1200, message: 'Look away for 20 seconds!' },
+            { id: 'activeBreak', name: 'Active Break', duration: 3600, message: 'Stretch and move!' },
+            { id: 'refreshBreak', name: 'Refresh Break', duration: 7200, message: 'Relax and rehydrate!' },
+            { id: 'meditation1', name: 'Breath Meditation', duration: 900, message: 'Breath Meditation complete.' },
+            { id: 'meditation2', name: 'Body Scan Meditation', duration: 900, message: 'Body Scan Meditation complete.' },
+            { id: 'meditation3', name: 'Mindfulness Meditation', duration: 900, message: 'Mindfulness Meditation complete.' }
+        ];
+
+        const timersContainer = document.getElementById('timers');
+        const notificationsDiv = document.getElementById('notifications');
+        const emailInput = document.getElementById('email');
+
+        let activeTimers = {};
+
+        const formatTime = sec => `${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`;
+
+        function addNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            notificationsDiv.appendChild(notif);
+            notificationsDiv.scrollTop = notificationsDiv.scrollHeight;
+
+            const email = emailInput.value;
+            if (email) sendEmailNotification(email, message);
+        }
+
+        function sendEmailNotification(email, message) {
+            // Integrazione con un servizio email esterno
+            console.log(`Send email to ${email}: ${message}`);
+        }
+
+        function toggleTimer(timer, display, toggle) {
+            if (toggle.checked) {
+                let remaining = timer.duration;
+                display.textContent = formatTime(remaining);
+
+                activeTimers[timer.id] = setInterval(() => {
+                    remaining--;
+                    display.textContent = formatTime(remaining);
+                    if (remaining <= 0) {
+                        clearInterval(activeTimers[timer.id]);
+                        delete activeTimers[timer.id];
+                        addNotification(timer.message);
+                        toggle.checked = false;
+                        display.textContent = formatTime(timer.duration);
+                    }
+                }, 1000);
+            } else {
+                clearInterval(activeTimers[timer.id]);
+                delete activeTimers[timer.id];
+                display.textContent = formatTime(timer.duration);
+            }
+        }
+
+        function createTimerRow(timer) {
+            const row = document.createElement('div');
+            row.className = 'timer-row';
+
+            const label = document.createElement('div');
+            label.className = 'timer-label';
+            label.textContent = timer.name;
+            row.appendChild(label);
+
+            const display = document.createElement('div');
+            display.className = 'timer-display';
+            display.textContent = formatTime(timer.duration);
+            row.appendChild(display);
+
+            const switchContainer = document.createElement('label');
+            switchContainer.className = 'toggle-switch';
+
+            const toggle = document.createElement('input');
+            toggle.type = 'checkbox';
+            toggle.addEventListener('change', () => toggleTimer(timer, display, toggle));
+
+            const slider = document.createElement('span');
+            slider.className = 'slider';
+
+            switchContainer.appendChild(toggle);
+            switchContainer.appendChild(slider);
+            row.appendChild(switchContainer);
+
+            return row;
+        }
+
+        timersData.forEach(timer => timersContainer.appendChild(createTimerRow(timer)));
+    </script>
+</body>
+</html>
