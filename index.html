@@ -94,11 +94,11 @@
     input:checked + .slider:before {
       transform: translateX(20px);
     }
-    /* Dark mode switch */
+    /* Dark mode switch position adjustment */
     .theme-switch {
       position: absolute;
       top: 20px;
-      right: 20px;
+      left: 20px;
       display: inline-block;
       width: 40px;
       height: 20px;
@@ -127,7 +127,7 @@
       </div>
     </div>
 
-    <!-- Timers -->
+    <!-- Timers for 20-20-20 Rule, Active Break, Refresh Break -->
     <div id="timers"></div>
 
     <!-- Lunch Break Switch -->
@@ -145,12 +145,12 @@
   <script>
     // Timer configuration
     const timers = [
-      { id: 'rule20', name: '20-20-20 Rule', duration: 1200 },
-      { id: 'activeBreak', name: 'Active Break', duration: 3600 },
-      { id: 'refreshBreak', name: 'Refresh Break', duration: 7200 },
-      { id: 'meditation1', name: 'Breath Meditation', duration: 900 },
-      { id: 'meditation2', name: 'Body Scan Meditation', duration: 900 },
-      { id: 'meditation3', name: 'Mindfulness Meditation', duration: 900 }
+      { id: 'rule20', name: '20-20-20 Rule', duration: 1200, isActive: false },
+      { id: 'activeBreak', name: 'Active Break', duration: 3600, isActive: false },
+      { id: 'refreshBreak', name: 'Refresh Break', duration: 7200, isActive: false },
+      { id: 'meditation1', name: 'Breath Meditation', duration: 900, isActive: false },
+      { id: 'meditation2', name: 'Body Scan Meditation', duration: 900, isActive: false },
+      { id: 'meditation3', name: 'Mindfulness Meditation', duration: 900, isActive: false }
     ];
 
     let timerIntervals = {};
@@ -166,7 +166,6 @@
 
     // Start the timer countdown
     const startTimer = (timerObj, displayElement) => {
-      if (!startMyDayActive || lunchBreakActive) return;
       let remaining = timerObj.duration;
       displayElement.textContent = formatTime(remaining);
       timerIntervals[timerObj.id] = setInterval(() => {
@@ -203,30 +202,28 @@
       display.textContent = formatTime(timerObj.duration);
       row.appendChild(display);
 
-      const switchContainer = document.createElement('div');
-      switchContainer.className = 'switch';
-      const toggleLabel = document.createElement('label');
-      toggleLabel.className = 'toggle-switch';
+      if (timerObj.id !== 'rule20' && timerObj.id !== 'activeBreak' && timerObj.id !== 'refreshBreak') {
+        const switchContainer = document.createElement('div');
+        switchContainer.className = 'switch';
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'toggle-switch';
 
-      const toggleInput = document.createElement('input');
-      toggleInput.type = 'checkbox';
-      toggleInput.id = `${timerObj.id}-toggle`;
-      toggleLabel.appendChild(toggleInput);
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.id = `${timerObj.id}-toggle`;
+        toggleLabel.appendChild(toggleInput);
 
-      const slider = document.createElement('span');
-      slider.className = 'slider';
-      toggleLabel.appendChild(slider);
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggleLabel.appendChild(slider);
 
-      switchContainer.appendChild(toggleLabel);
-      row.appendChild(switchContainer);
+        switchContainer.appendChild(toggleLabel);
+        row.appendChild(switchContainer);
 
-      toggleInput.addEventListener('change', function() {
-        if (this.checked) {
-          startTimer(timerObj, display);
-        } else {
-          stopTimer(timerObj, display);
-        }
-      });
+        toggleInput.addEventListener('change', function () {
+          timerObj.isActive = this.checked;
+        });
+      }
 
       return row;
     };
@@ -241,11 +238,23 @@
     document.getElementById('startMyDay').addEventListener('change', function () {
       startMyDayActive = this.checked;
       if (startMyDayActive) {
-        timers.forEach(timerObj => {
+        // Start only the first three timers
+        ['rule20', 'activeBreak', 'refreshBreak'].forEach(id => {
+          const timerObj = timers.find(timer => timer.id === id);
           const displayElement = document.getElementById(`${timerObj.id}-display`);
           startTimer(timerObj, displayElement);
         });
+
+        // Deactivate meditation timers if not activated
+        ['meditation1', 'meditation2', 'meditation3'].forEach(id => {
+          const timerObj = timers.find(timer => timer.id === id);
+          if (timerObj.isActive) {
+            const displayElement = document.getElementById(`${timerObj.id}-display`);
+            startTimer(timerObj, displayElement);
+          }
+        });
       } else {
+        // Stop all timers when Start My Day is off
         timers.forEach(timerObj => {
           const displayElement = document.getElementById(`${timerObj.id}-display`);
           stopTimer(timerObj, displayElement);
@@ -257,13 +266,18 @@
     document.getElementById('lunchBreak').addEventListener('change', function () {
       lunchBreakActive = this.checked;
       if (lunchBreakActive) {
+        // Stop all timers without resetting their state
         timers.forEach(timerObj => {
-          stopTimer(timerObj, document.getElementById(`${timerObj.id}-display`));
+          const displayElement = document.getElementById(`${timerObj.id}-display`);
+          stopTimer(timerObj, displayElement);
         });
       } else {
+        // Restart timers that were previously stopped
         if (startMyDayActive) {
-          timers.forEach(timerObj => {
-            startTimer(timerObj, document.getElementById(`${timerObj.id}-display`));
+          ['rule20', 'activeBreak', 'refreshBreak'].forEach(id => {
+            const timerObj = timers.find(timer => timer.id === id);
+            const displayElement = document.getElementById(`${timerObj.id}-display`);
+            startTimer(timerObj, displayElement);
           });
         }
       }
